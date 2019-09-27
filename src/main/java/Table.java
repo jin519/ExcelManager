@@ -4,40 +4,44 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * ----------------------------------<br>
- * | field | field | field | field |...<br>
- * ----------------------------------<br>
+ * ---------------------------------<br>
+ * | header| header| header| header|...<br>
+ * ---------------------------------<br>
  * |content|content|content|content|... <- record[id]<br>
- * ----------------------------------<br>
+ * ---------------------------------<br>
  * |content|content|content|content|... <- record[id]<br>
  * ----------------------------------
  */
 public class Table <T>
 {
-    private List<String> fields = new ArrayList<>();
+    private List<String> headers = new ArrayList<>();
     private TreeMap<String, T> idRecordMap = new TreeMap<>();
+    private Class<T> recordClass;
 
-    public Table() {}
-
-    public Table(final List<String> fields)
+    public Table(final Class<T> recordClass)
     {
-        setFields(fields);
+        this.recordClass = recordClass;
     }
 
-    public List<String> getFields()
+    public void set(final String id, final T record)
     {
-        return fields;
+        idRecordMap.put(id, record);
     }
 
-    public void setFields(final List<String> fields)
+    public List<String> getHeaders()
     {
-        this.fields.clear();
-        this.fields.addAll(fields);
+        return headers;
     }
 
-    public void addField(final String field)
+    public void setHeaders(final List<String> headers)
     {
-        fields.add(field);
+        this.headers.clear();
+        this.headers.addAll(headers);
+    }
+
+    public void addHeader(final String header)
+    {
+        headers.add(header);
     }
 
     public Set<String> getIds()
@@ -50,17 +54,18 @@ public class Table <T>
         return idRecordMap.get(id);
     }
 
-    public void set(final String id, final T record)
+    public Class<T> getRecordClass()
     {
-        idRecordMap.put(id, record);
+        return recordClass;
     }
 
     @Override
     public String toString()
     {
         return "Table{" +
-                "fields=" + fields +
+                "headers=" + headers +
                 ", idRecordMap=" + idRecordMap +
+                ", recordClass=" + recordClass +
                 '}';
     }
 }

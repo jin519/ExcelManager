@@ -10,13 +10,19 @@ public class ExcelReader
     private Workbook workbook = null;
     private static final DataFormatter DATA_FORMATTER = new DataFormatter();
 
-    public ExcelReader() {}
-
+    /**
+     * 생성자
+     * @param path 파일 경로
+     */
     public ExcelReader(final String path)
     {
         setPath(path);
     }
 
+    /**
+     * 파일 경로를 설정한다.
+     * @param path 파일 경로
+     */
     public void setPath(final String path)
     {
         if (workbook != null)
@@ -28,42 +34,51 @@ public class ExcelReader
     /**
      * 행 단위로 워크시트 데이터를 읽고, {@link Table} 인스턴스에 담아서 반환한다.
      * @param sheetIndex 워크시트 인덱스(0부터 시작)
-     * @param dataStructureClass 자료구조 클래스
+     * @param recordClass 레코드 자료구조 클래스 정보
      * @param usingFirstColumnAsId 첫번째 열의 값을 레코드 id로 사용할지 여부(false: 행 번호)
-     * @param <T> 자료구조
+     * @param <T> 레코드 자료구조
      * @return 워크시트 데이터가 담긴 {@link Table} 인스턴스
      */
-    public <T> Table<T> read(final int sheetIndex, final Class<T> dataStructureClass, final boolean usingFirstColumnAsId)
+    public <T> Table<T> read(final int sheetIndex, final Class<T> recordClass, final boolean usingFirstColumnAsId)
     {
-        Table<T> table = new Table<>();
-
-        TypeWrapper<T> DATA_STRUCTURE = new TypeWrapper<>(dataStructureClass);
-        List<Field> contents = DATA_STRUCTURE.getDeclaredFields();
+        Table<T> table = new Table<>(recordClass);
 
         final Sheet SHEET = workbook.getSheetAt(sheetIndex);
         final int FIRST_ROW_NUM = SHEET.getFirstRowNum();
         final Row FIRST_ROW = SHEET.getRow(FIRST_ROW_NUM);
 
-        FIRST_ROW.forEach(CELL -> table.addField(DATA_FORMATTER.formatCellValue(CELL)));
+        readHeaders(FIRST_ROW, table);
+        readContents(
+                SHEET, FIRST_ROW_NUM + 1, FIRST_ROW.getFirstCellNum(), FIRST_ROW.getLastCellNum(),
+                usingFirstColumnAsId, table, recordClass);
 
-        final int FIRST_COLUMN_NUM = FIRST_ROW.getFirstCellNum();
-        final int LAST_COLUMN_NUM = FIRST_ROW.getLastCellNum();
+        return table;
+    }
 
-        for (int rowNum = (FIRST_ROW_NUM + 1); rowNum <= SHEET.getLastRowNum(); ++rowNum)
+    private void readHeaders(final Row firstRow, Table<?> table)
+    {
+        firstRow.forEach(cell -> table.addHeader(DATA_FORMATTER.formatCellValue(cell)));
+    }
+
+    private <T> void readContents(
+            final Sheet sheet, final int secondRowIdx, final int firstColumnIdx, final int lastColumnIdx,
+            final boolean usingFirstColumnAsId, final Table<T> table, final Class<T> recordClass)
+    {
+        List<Field> contents = GenericClass.getDeclaredFields(recordClass);
+
+        for (int rowNum = secondRowIdx; rowNum <= sheet.getLastRowNum(); ++rowNum)
         {
-            final Row ROW = SHEET.getRow(rowNum);
-            T record = DATA_STRUCTURE.getInstance();
+            final Row ROW = sheet.getRow(rowNum);
+            T record = GenericClass.getInstance(recordClass);
             String id = Integer.toString(rowNum);
 
             if (usingFirstColumnAsId)
-                id = readRecordWithId(ROW, record, contents, FIRST_COLUMN_NUM, LAST_COLUMN_NUM);
+                id = readRecordWithId(ROW, record, contents, firstColumnIdx, lastColumnIdx);
             else
-                readRecordWithoutId(ROW, record, contents, FIRST_COLUMN_NUM, LAST_COLUMN_NUM);
+                readRecordWithoutId(ROW, record, contents, firstColumnIdx, lastColumnIdx);
 
             table.set(id, record);
         }
-
-        return table;
     }
 
     private <T> String readRecordWithId(final Row row, T record, List<Field> contents, final int firstColumnNum, final int lastColumnNum)
