@@ -1,10 +1,10 @@
-package record;
+package record_data_structure;
 
-public class Person
+public class Company
 {
     private String name;
     private String engName;
-    private String gender;
+    private String ceoName;
     private String part;
     private String filmoNum;
     private String filmography;
@@ -29,14 +29,14 @@ public class Person
         this.engName = engName;
     }
 
-    public String getGender()
+    public String getCeoName()
     {
-        return gender;
+        return ceoName;
     }
 
-    public void setGender(String gender)
+    public void setCeoName(String ceoName)
     {
-        this.gender = gender;
+        this.ceoName = ceoName;
     }
 
     public String getPart()
@@ -72,10 +72,10 @@ public class Person
     @Override
     public String toString()
     {
-        return "Person{" +
+        return "Company{" +
                 "name='" + name + '\'' +
                 ", engName='" + engName + '\'' +
-                ", gender='" + gender + '\'' +
+                ", ceoName='" + ceoName + '\'' +
                 ", part='" + part + '\'' +
                 ", filmoNum='" + filmoNum + '\'' +
                 ", filmography='" + filmography + '\'' +

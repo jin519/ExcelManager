@@ -1,6 +1,6 @@
-package record;
+package record_data_structure;
 
-public class Test
+public class Profile
 {
     private String name;
     private String age;

@@ -1,4 +1,4 @@
-package record;
+package record_data_structure;
 
 public class Movie
 {
