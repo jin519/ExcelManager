@@ -66,7 +66,7 @@ public class ExcelReader
      * @param <T> 레코드 자료구조
      * @return 워크시트 데이터가 담긴 {@link Table} 인스턴스
      */
-    public <T> Table<T> read(final int sheetIndex, final Class<T> recordClass, final boolean usingFirstColumnAsId) throws IllegalAccessException
+    public <T> Table<T> read(final int sheetIndex, final Class<T> recordClass, final boolean usingFirstColumnAsId) throws IllegalAccessException, InstantiationException
     {
         Table<T> table = new Table<>(recordClass);
 
@@ -110,7 +110,7 @@ public class ExcelReader
      * @param recordClass 레코드 자료구조 클래스 정보
      * @param <T> 레코드 자료구조
      */
-    private <T> void readContents(final Sheet sheet, final int firstRecordRowIdx, final int firstColumnIdx, final int lastColumnIdx, final boolean usingFirstColumnAsId, final Table<T> table, final Class<T> recordClass) throws IllegalAccessException
+    private <T> void readContents(final Sheet sheet, final int firstRecordRowIdx, final int firstColumnIdx, final int lastColumnIdx, final boolean usingFirstColumnAsId, final Table<T> table, final Class<T> recordClass) throws IllegalAccessException, InstantiationException
     {
         List<Field> contents = GenericClass.getDeclaredFields(recordClass);
 
@@ -118,16 +118,7 @@ public class ExcelReader
         {
             final Row ROW = sheet.getRow(rowNum);
 
-            T record = null;
-            try
-            {
-                record = GenericClass.getInstance(recordClass);
-            }
-            catch (InstantiationException e)
-            {
-                e.printStackTrace();
-            }
-
+            T record = GenericClass.getInstance(recordClass);
             String id = Integer.toString(rowNum);
 
             if (usingFirstColumnAsId)

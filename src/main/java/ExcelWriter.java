@@ -2,58 +2,82 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
+/**
+ * @author 원진
+ * @contact godjin519@gmail.com
+ */
 public class ExcelWriter
 {
     private Map<String, Table<?>> sheetTableMap = new LinkedHashMap<>();
 
-    public <T> void set(final String sheetName, final Table<T> table)
+    /**
+     * 생성할 워크시트 명과 데이터를 기록할 테이블을 설정한다.
+     * @param sheetName 워크시트 명
+     * @param table 테이블
+     */
+    public void set(final String sheetName, final Table<?> table)
     {
         sheetTableMap.put(sheetName, table);
     }
 
-    public void write(final String path)
+    /**
+     * 경로에 위치한 엑셀 파일에 설정 순서대로 워크시트를 만들고 테이블 데이터를 기록한다.
+     * @param path 경로
+     */
+    public void write(final String path) throws IOException, IllegalAccessException
     {
         Workbook workbook = new XSSFWorkbook();
         writeTables(workbook);
 
-        FileOutputStream fileOutputStream = openFileOutputStream(path);
-        writeWorkbook(workbook, fileOutputStream);
+        FileOutputStream fileOutputStream = new FileOutputStream(path);
+        workbook.write(fileOutputStream);
 
-        closeFileOutputStream(fileOutputStream);
-        closeWorkbook(workbook);
+        fileOutputStream.close();
+        workbook.close();
+
+        sheetTableMap.clear();
     }
 
-    private void writeTables(Workbook workbook)
+    /**
+     * 엑셀 파일에 설정 순서대로 워크시트를 만들고 테이블 데이터를 기록한다.
+     * @param workbook 엑셀 파일
+     */
+    private void writeTables(Workbook workbook) throws IllegalAccessException
     {
-        sheetTableMap.forEach((sheetName, table) ->
+        for (String sheetName : sheetTableMap.keySet())
         {
             Sheet sheet = workbook.createSheet(sheetName);
 
-            final List<String> HEADERS = table.getHeaders();
+            final Table<?> TABLE = sheetTableMap.get(sheetName);
+            final List<String> HEADERS = TABLE.getHeaders();
             writeHeaders(sheet, HEADERS);
 
-            List<Field> CONTENTS = GenericClass.getDeclaredFields(table.getRecordClass());
+            final List<Field> CONTENTS = GenericClass.getDeclaredFields(TABLE.getRecordClass());
 
             int rowNum = 1;
-            for (final String ID : table.getIds())
+            for (final String ID : TABLE.getIds())
             {
                 Row row = sheet.createRow(rowNum++);
-                final Object RECORD = table.getRecord(ID);
+                final Object RECORD = TABLE.getRecord(ID);
 
                 if (HEADERS.size() > CONTENTS.size())
                     writeRecordWithId(row, CONTENTS, ID, RECORD);
                 else
                     writeRecordWithoutId(row, CONTENTS, ID, RECORD);
             }
-        });
+        }
     }
 
+    /**
+     * 헤더를 워크시트에 기록한다.
+     * @param sheet 워크시트
+     * @param headers 헤더
+     */
     private void writeHeaders(final Sheet sheet, final List<String> headers)
     {
         Row firstRow = sheet.createRow(0);
@@ -62,83 +86,33 @@ public class ExcelWriter
             firstRow.createCell(headerIdx).setCellValue(headers.get(headerIdx));
     }
 
-    private void writeRecordWithId(final Row row, final List<Field> contents, final String id, final Object record)
+    /**
+     * id를 첫번째 열에 기록한다.<br>
+     * 컨텐츠를 두번째 열부터 기록한다.
+     * @param row 레코드가 위치한 행
+     * @param contents 컨텐츠
+     * @param id id
+     * @param record 레코드
+     */
+    private void writeRecordWithId(final Row row, final List<Field> contents, final String id, final Object record) throws IllegalAccessException
     {
         row.createCell(0).setCellValue(id);
 
-        for (int contentIdx = 0, cellNum = 1; contentIdx < contents.size(); ++contentIdx, ++cellNum)
-            row.createCell(cellNum).setCellValue(getContent(contents.get(contentIdx), record));
+        for (int contentIdx = 0, columnIdx = 1; contentIdx < contents.size(); ++contentIdx, ++columnIdx)
+            row.createCell(columnIdx).setCellValue(String.valueOf(contents.get(contentIdx).get(record)));
     }
 
-    private void writeRecordWithoutId(final Row row, final List<Field> contents, final String id, final Object record)
+    /**
+     * id를 첫번째 열에 기록하지 않는다.<br>
+     * 컨텐츠를 첫번째 열부터 기록한다.
+     * @param row 레코드가 위치한 행
+     * @param contents 컨텐츠
+     * @param id id
+     * @param record 레코드
+     */
+    private void writeRecordWithoutId(final Row row, final List<Field> contents, final String id, final Object record) throws IllegalAccessException
     {
         for (int contentIdx = 0; contentIdx < contents.size(); ++contentIdx)
-            row.createCell(contentIdx).setCellValue(getContent(contents.get(contentIdx), record));
-    }
-
-    private void writeWorkbook(Workbook workbook, FileOutputStream fileOutputStream)
-    {
-        try
-        {
-            workbook.write(fileOutputStream);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private String getContent(final Field content, final Object record)
-    {
-        try
-        {
-            return String.valueOf(content.get(record));
-        }
-        catch (IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private FileOutputStream openFileOutputStream(final String path)
-    {
-        FileOutputStream fileOutputStream = null;
-
-        try
-        {
-            fileOutputStream = new FileOutputStream(path);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
-        return fileOutputStream;
-    }
-
-    private void closeFileOutputStream(FileOutputStream fileOutputStream)
-    {
-        try
-        {
-            fileOutputStream.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private void closeWorkbook(Workbook workbook)
-    {
-        try
-        {
-            workbook.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+            row.createCell(contentIdx).setCellValue(String.valueOf(contents.get(contentIdx).get(record)));
     }
 }
