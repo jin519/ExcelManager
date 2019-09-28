@@ -117,7 +117,17 @@ public class ExcelReader
         for (int rowNum = firstRecordRowIdx; rowNum <= sheet.getLastRowNum(); ++rowNum)
         {
             final Row ROW = sheet.getRow(rowNum);
-            T record = GenericClass.getInstance(recordClass);
+
+            T record = null;
+            try
+            {
+                record = GenericClass.getInstance(recordClass);
+            }
+            catch (InstantiationException e)
+            {
+                e.printStackTrace();
+            }
+
             String id = Integer.toString(rowNum);
 
             if (usingFirstColumnAsId)
