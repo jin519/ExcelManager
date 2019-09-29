@@ -56,15 +56,15 @@ ExcelManager는 ExcelReader, ExcelWriter로 구성됩니다.<br>
     <td><img src=md/fig3.png></td>
   </tr>
   <tr>
-    <td>read_test.xlsx 파일 내 영화 워크시트를 일부 발췌하였습니다.</td>
-    <td>read_test2.xlsx 파일 내 프로필 워크시트를 일부 발췌하였습니다.</td></td>
+    <td>read_test.xlsx 영화 워크시트를 일부 발췌하였습니다.</td>
+    <td>read_test2.xlsx 프로필 워크시트를 일부 발췌하였습니다.</td></td>
   </tr>
   <tr>
     <td width="50%"><img src=md/fig4.png></td>
     <td><img src=md/fig5.png></td>
   </tr>
   <tr>
-    <td>write_test.xlsx 파일 내 영화 워크시트를 일부 발췌하였습니다. id를 기준으로 레코드를 정렬합니다.</td>
-    <td>write_test2.xlsx 파일 내 프로필 워크시트를 일부 발췌하였습니다.</td></td>
+    <td>write_test.xlsx 영화 워크시트를 일부 발췌하였습니다.<br>id를 기준으로 레코드를 정렬합니다.</td>
+    <td>write_test2.xlsx 프로필 워크시트를 일부 발췌하였습니다.</td></td>
   </tr>
 </table>
